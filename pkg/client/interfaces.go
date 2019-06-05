@@ -20,6 +20,7 @@ import (
 	"context"
 
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 
 	"k8s.io/apimachinery/pkg/api/meta"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -44,9 +45,33 @@ type Patch interface {
 	Type() types.PatchType
 	// Data is the raw data representing the patch.
 	Data(obj runtime.Object) ([]byte, error)
+	// DataFromUnstructured is the raw data representing the patch from unstructured
+	DataFromUnstructured(obj Unstructured) ([]byte, error)
 }
 
 // TODO(directxman12): is there a sane way to deal with get/delete options?
+
+// Unstructured is an interface to type unstructured.Unstructured in apimachinery
+type Unstructured interface {
+	runtime.Unstructured
+	// MarshalJSON returns the raw data representing Unstructured
+	MarshalJSON() ([]byte, error)
+	// GetName returns the name of Unstructured
+	GetName() string
+	// GetNamespace returns the namespace of Unstructured
+	GetNamespace() string
+	// GroupVersionKind returns the stored group, version, and kind of an object
+	GroupVersionKind() schema.GroupVersionKind
+}
+
+// UnstructuredList is an interface to type unstructured.UnstructuredList in apimachinery
+type UnstructuredList interface {
+	runtime.Object
+	// GroupVersionKind returns the stored group, version, and kind of an object
+	GroupVersionKind() schema.GroupVersionKind
+	// SetUnstructuredContent updates the object content of UnstructuredList object
+	SetUnstructuredContent(content map[string]interface{})
+}
 
 // Reader knows how to read and list Kubernetes objects.
 type Reader interface {

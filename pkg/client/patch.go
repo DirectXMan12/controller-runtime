@@ -43,6 +43,11 @@ func (s *patch) Data(obj runtime.Object) ([]byte, error) {
 	return s.data, nil
 }
 
+// DataFromUnstructured implements Patch.
+func (s *patch) DataFromUnstructured(obj Unstructured) ([]byte, error) {
+	return s.data, nil
+}
+
 // ConstantPatch constructs a new Patch with the given PatchType and data.
 func ConstantPatch(patchType types.PatchType, data []byte) Patch {
 	return &patch{patchType, data}
@@ -72,6 +77,21 @@ func (s *mergeFromPatch) Data(obj runtime.Object) ([]byte, error) {
 	return jsonpatch.CreateMergePatch(originalJSON, modifiedJSON)
 }
 
+// DataFromUnstructured implements Patch.
+func (s *mergeFromPatch) DataFromUnstructured(obj Unstructured) ([]byte, error) {
+	originalJSON, err := json.Marshal(s.from)
+	if err != nil {
+		return nil, err
+	}
+
+	modifiedJSON, err := obj.MarshalJSON()
+	if err != nil {
+		return nil, err
+	}
+
+	return jsonpatch.CreateMergePatch(originalJSON, modifiedJSON)
+}
+
 // MergeFrom creates a Patch that patches using the merge-patch strategy with the given object as base.
 func MergeFrom(obj runtime.Object) Patch {
 	return &mergeFromPatch{obj}
@@ -92,4 +112,8 @@ func (p applyPatch) Data(obj runtime.Object) ([]byte, error) {
 	// correct and sufficient for our uses (it's what the JSON serializer in
 	// client-go does, more-or-less).
 	return json.Marshal(obj)
+}
+
+func (p applyPatch) DataFromUnstructured(obj Unstructured) ([]byte, error) {
+	return obj.MarshalJSON()
 }
