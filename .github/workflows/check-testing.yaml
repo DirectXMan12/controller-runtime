@@ -1,12 +1,11 @@
 on:
-  pull_request:
-    types: ["opened", "synchronize", "reopened"]
+  repository_dispatch:
+    types: [start-suite-tests]
 
 jobs:
   checkerator:
     runs-on: ubuntu-latest
     name: checkerator-test
     steps:
-    - uses: docker://gcr.io/kubebuilder/checkerator:test-7
-      with:
-        github_token: ${{ secrets.GITHUB_TOKEN }}
+    - name: debug
+      run: "cat $GITHUB_EVENT_PATH"
